@@ -51,7 +51,6 @@ def on_release(key):
     global periods
     periods[count - 1].append((time.time() - start) * 1000)
 
-
 # Collect events until released
 with Listener(on_press=on_press, on_release=on_release) as listener:
     # open stream object as input & output
@@ -103,11 +102,11 @@ song = AudioSegment.from_wav("./record_keyboard.wav")
 
 for i, value in enumerate(periods):
     try:
-        chunks.append(song[value[0]:value[1]])
+        chunks.append(song[value[0] - 100 :value[1] + 100])
     except:
         print(periods[i])
         print(periods[i + 1])
-        chunks.append(song[value[0]:periods[i + 1][0]])
+        chunks.append(song[value[0] - 100:periods[i + 1][0] + 100])
         periods[i + 1].pop(0)
         print(periods[i + 1])
 
