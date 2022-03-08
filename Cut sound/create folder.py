@@ -4,6 +4,6 @@ alphabet = ['a', 'b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q'
 
 for i in alphabet: 
     try:
-        os.makedirs('./Test/' + i)
+        os.makedirs('./Keystrokes/' + i)
     except:
         print(i + ' Already exist donc tg')
