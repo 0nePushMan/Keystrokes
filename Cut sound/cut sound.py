@@ -19,7 +19,7 @@ for path in os.listdir(dir):
         initial_count += 1
 
 # the file name output you want to record into
-filename = str(initial_count) + ".wav"
+filename = "test.wav"
 # set the chunk size of 1024 samples
 chunk = 1024
 # sample format
@@ -88,7 +88,7 @@ wf.writeframes(b"".join(frames))
 # close the file
 wf.close()
 
-time.sleep(5) 
+time.sleep(5)
 
 for i in sentence:
     try:
@@ -102,16 +102,17 @@ def match_target_amplitude(aChunk, target_dBFS):
     change_in_dBFS = target_dBFS - aChunk.dBFS
     return aChunk.apply_gain(change_in_dBFS)
 
-song = AudioSegment.from_mp3("./Test/" + str(initial_count) + ".wav")
+
+song = AudioSegment.from_wav("./test.wav")
 
 chunks = split_on_silence(
     # Use the loaded audio.
     song,
     # Specify that a silent chunk must be at least 2 seconds or 2000 ms long.
-    min_silence_len = 0,
+    min_silence_len= 2000,
     # Consider a chunk silent if it's quieter than -16 dBFS.
     # (You may want to adjust this parameter.)
-    silence_thresh= -16
+    silence_thresh = -16
 )
 
 print(len(chunks))
