@@ -1,5 +1,6 @@
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
+from pydub.playback import play
 from pynput.keyboard import Key, Listener
 import pyaudio
 import wave
@@ -7,16 +8,10 @@ import os
 import time
 
 sentence = []
+periods = []
+chunks = []
 count = 0
-boolean = True
 start = time.time()
-
-initial_count = 0
-dir = "./Test"
-
-for path in os.listdir(dir):
-    if os.path.isfile(os.path.join(dir, path)):
-        initial_count += 1
 
 # the file name output you want to record into
 filename = "test.wav"
@@ -35,8 +30,10 @@ p = pyaudio.PyAudio()
 
 def on_press(key):
     global sentence
+    global periods
     global count
     global record_seconds
+
     if key == Key.esc:
         record_seconds = time.time() - start
         return False
@@ -45,12 +42,18 @@ def on_press(key):
             key_code = key.vk
         except AttributeError:
             key_code = key.value.vk
+
     sentence.append(str(key_code))
+    periods.append([(time.time() - start) * 1000])
     count += 1
+
+def on_release(key):
+    global periods
+    periods[count - 1].append((time.time() - start) * 1000)
 
 
 # Collect events until released
-with Listener(on_press=on_press) as listener:
+with Listener(on_press=on_press, on_release=on_release) as listener:
     # open stream object as input & output
     stream = p.open(format=FORMAT,
                     channels=channels,
@@ -96,45 +99,42 @@ for i in sentence:
     except:
         break
 
+song = AudioSegment.from_wav("./test.wav")
+
+for i, value in enumerate(periods):
+    try:
+        chunks.append(song[value[0]:value[1]])
+    except:
+        chunks.append(song[value[0]:periods[i + 1][0]])
 
 def match_target_amplitude(aChunk, target_dBFS):
     ''' Normalize given audio chunk '''
     change_in_dBFS = target_dBFS - aChunk.dBFS
     return aChunk.apply_gain(change_in_dBFS)
 
-
-song = AudioSegment.from_wav("./test.wav")
-
-chunks = split_on_silence(
-    # Use the loaded audio.
-    song,
-    # Specify that a silent chunk must be at least 2 seconds or 2000 ms long.
-    min_silence_len= 2000,
-    # Consider a chunk silent if it's quieter than -16 dBFS.
-    # (You may want to adjust this parameter.)
-    silence_thresh = -16
-)
-
-print(len(chunks))
-print(len(sentence))
-
 # Process each chunk with your parameters
-# if len(chunks) == len(sentence):
-#     for i, chunk in enumerate(chunks):
-#         # Create a silence chunk that's 0.5 seconds (or 500 ms) long for padding.
-#         silence_chunk = AudioSegment.silent(duration=500)
+if len(chunks) == len(sentence):
+    for i, chunk in enumerate(chunks):
+        # Create a silence chunk that's 0.5 seconds (or 500 ms) long for padding.
+        silence_chunk = AudioSegment.silent(duration=500)
 
-#         # Add the padding chunk to beginning and end of the entire chunk.
-#         audio_chunk = silence_chunk + chunk + silence_chunk
+        # Add the padding chunk to beginning and end of the entire chunk.
+        audio_chunk = silence_chunk + chunk + silence_chunk
 
-#         # Normalize the entire chunk.
-#         normalized_chunk = match_target_amplitude(audio_chunk, -20.0)
+        # Normalize the entire chunk.
+        normalized_chunk = match_target_amplitude(audio_chunk, -20.0)
 
-#         # Export the audio chunk with new bitrate.
-#         print("Exporting " + sentence[i] + ".mp3.".format(i))
-#         normalized_chunk.export(
-#             "./Test/" + sentence[i].lower() + "/" +
-#             sentence[i] + ".mp3".format(i),
-#             bitrate="192k",
-#             format="mp3"
-#         )
+        nbOfFiles = 0
+        dir = './Keystrokes/' + str(sentence[i])
+        # Export the audio chunk with new bitrate.
+        # print("Exporting " + sentence[i] + ".mp3.".format(i))
+        for path in os.listdir(dir):
+            if os.path.isfile(os.path.join(dir, path)):
+                nbOfFiles += 1
+
+        normalized_chunk.export(
+            "./Keystrokes/" + sentence[i] + "/" +
+            str(nbOfFiles + 1) + ".mp3".format(i),
+            bitrate="192k",
+            format="mp3"
+        )
