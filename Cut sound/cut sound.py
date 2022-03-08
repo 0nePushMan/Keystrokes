@@ -14,7 +14,7 @@ count = 0
 start = time.time()
 
 # the file name output you want to record into
-filename = "test.wav"
+filename = "record_keyboard.wav"
 # set the chunk size of 1024 samples
 chunk = 1024
 # sample format
@@ -99,7 +99,7 @@ for i in sentence:
     except:
         break
 
-song = AudioSegment.from_wav("./test.wav")
+song = AudioSegment.from_wav("./record_keyboard.wav")
 
 for i, value in enumerate(periods):
     try:
