@@ -4,14 +4,22 @@ from pynput.keyboard import Key, Listener
 import pyaudio
 import wave
 import os
-import time 
+import time
 
 sentence = []
 count = 0
 boolean = True
 start = time.time()
+
+initial_count = 0
+dir = "./Test"
+
+for path in os.listdir(dir):
+    if os.path.isfile(os.path.join(dir, path)):
+        initial_count += 1
+
 # the file name output you want to record into
-filename = "toCut.mp3"
+filename = str(initial_count) + ".wav"
 # set the chunk size of 1024 samples
 chunk = 1024
 # sample format
@@ -28,7 +36,7 @@ p = pyaudio.PyAudio()
 def on_press(key):
     global sentence
     global count
-    global record_seconds 
+    global record_seconds
     if key == Key.esc:
         record_seconds = time.time() - start
         return False
@@ -40,20 +48,22 @@ def on_press(key):
     sentence.append(str(key_code))
     count += 1
 
+
 # Collect events until released
 with Listener(on_press=on_press) as listener:
     # open stream object as input & output
     stream = p.open(format=FORMAT,
-                channels=channels,
-                rate=sample_rate,
-                input=True,
-                output=True,
-                frames_per_buffer=chunk)
+                    channels=channels,
+                    rate=sample_rate,
+                    input=True,
+                    output=True,
+                    frames_per_buffer=chunk)
     frames = []
     print("Recording...")
     listener.join()
-    
-print(record_seconds)
+
+print(round(record_seconds))
+
 for i in range(int(sample_rate / chunk * record_seconds)):
     data = stream.read(chunk)
     # if you want to hear your voice while recording
@@ -65,7 +75,7 @@ print("Finished recording.")
 stream.stop_stream()
 stream.close()
 # terminate pyaudio object
-p.terminate()
+p.terminate('./Test')
 # save audio file
 # open the file in 'write bytes' mode
 wf = wave.open(filename, "wb")
@@ -80,46 +90,52 @@ wf.writeframes(b"".join(frames))
 # close the file
 wf.close()
 
-# for i in sentence:
-#     try:
-#         os.makedirs('./Keystrokes/' + i)
-#     except:
-#         print(i + ' Already exist')
+time.sleep(5) 
 
-# def match_target_amplitude(aChunk, target_dBFS):
-#     ''' Normalize given audio chunk '''
-#     change_in_dBFS = target_dBFS - aChunk.dBFS
-#     return aChunk.apply_gain(change_in_dBFS)
+for i in sentence:
+    try:
+        os.makedirs('./Keystrokes/' + i)
+    except:
+        break
 
 
-# song = AudioSegment.from_mp3("./Sentence/Portez.mp3")
+def match_target_amplitude(aChunk, target_dBFS):
+    ''' Normalize given audio chunk '''
+    change_in_dBFS = target_dBFS - aChunk.dBFS
+    return aChunk.apply_gain(change_in_dBFS)
 
+song = AudioSegment.from_mp3("./Test/" + str(initial_count) + ".wav")
 
-# chunks = split_on_silence(
-#     # Use the loaded audio.
-#     song,
-#     # Specify that a silent chunk must be at least 2 seconds or 2000 ms long.
-#     min_silence_len=50,
-#     # Consider a chunk silent if it's quieter than -16 dBFS.
-#     # (You may want to adjust this parameter.)
-#     silence_thresh=-16
-# )
+chunks = split_on_silence(
+    # Use the loaded audio.
+    song,
+    # Specify that a silent chunk must be at least 2 seconds or 2000 ms long.
+    min_silence_len = 0,
+    # Consider a chunk silent if it's quieter than -16 dBFS.
+    # (You may want to adjust this parameter.)
+    silence_thresh= -16
+)
 
-# # Process each chunk with your parameters
-# for i, chunk in enumerate(chunks):
-#     # Create a silence chunk that's 0.5 seconds (or 500 ms) long for padding.
-#     silence_chunk = AudioSegment.silent(duration=500)
+print(len(chunks))
+print(len(sentence))
 
-#     # Add the padding chunk to beginning and end of the entire chunk.
-#     audio_chunk = silence_chunk + chunk + silence_chunk
+# Process each chunk with your parameters
+# if len(chunks) == len(sentence):
+#     for i, chunk in enumerate(chunks):
+#         # Create a silence chunk that's 0.5 seconds (or 500 ms) long for padding.
+#         silence_chunk = AudioSegment.silent(duration=500)
 
-#     # Normalize the entire chunk.
-#     normalized_chunk = match_target_amplitude(audio_chunk, -20.0)
+#         # Add the padding chunk to beginning and end of the entire chunk.
+#         audio_chunk = silence_chunk + chunk + silence_chunk
 
-#     # Export the audio chunk with new bitrate.
-#     print("Exporting " + sentence[i] + ".mp3.".format(i))
-#     normalized_chunk.export(
-#         "./Test/" + sentence[i].lower() + "/" + sentence[i] + ".mp3".format(i),
-#         bitrate="192k",
-#         format="mp3"
-#     )
+#         # Normalize the entire chunk.
+#         normalized_chunk = match_target_amplitude(audio_chunk, -20.0)
+
+#         # Export the audio chunk with new bitrate.
+#         print("Exporting " + sentence[i] + ".mp3.".format(i))
+#         normalized_chunk.export(
+#             "./Test/" + sentence[i].lower() + "/" +
+#             sentence[i] + ".mp3".format(i),
+#             bitrate="192k",
+#             format="mp3"
+#         )
