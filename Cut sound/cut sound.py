@@ -62,8 +62,6 @@ with Listener(on_press=on_press) as listener:
     print("Recording...")
     listener.join()
 
-print(round(record_seconds))
-
 for i in range(int(sample_rate / chunk * record_seconds)):
     data = stream.read(chunk)
     # if you want to hear your voice while recording
@@ -75,7 +73,7 @@ print("Finished recording.")
 stream.stop_stream()
 stream.close()
 # terminate pyaudio object
-p.terminate('./Test')
+p.terminate()
 # save audio file
 # open the file in 'write bytes' mode
 wf = wave.open(filename, "wb")
