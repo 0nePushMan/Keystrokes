@@ -93,19 +93,27 @@ wf.close()
 
 time.sleep(5)
 
+print(sentence)
 for i in sentence:
+    print(i)
     try:
         os.makedirs('./Keystrokes/' + i)
-    except:
-        break
+    except Exception as e:
+        print('Error')
+        print(e.__class__)
 
 song = AudioSegment.from_wav("./record_keyboard.wav")
 
+print(periods)
 for i, value in enumerate(periods):
     try:
         chunks.append(song[value[0]:value[1]])
     except:
+        print(periods[i])
+        print(periods[i + 1])
         chunks.append(song[value[0]:periods[i + 1][0]])
+        periods[i + 1].pop(0)
+        print(periods[i + 1])
 
 def match_target_amplitude(aChunk, target_dBFS):
     ''' Normalize given audio chunk '''
