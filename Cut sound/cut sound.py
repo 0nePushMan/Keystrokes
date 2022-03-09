@@ -9,11 +9,19 @@ import os
 import time
 import shutil
 
+folders = ['Keystrokes', 'Keyboard_sound', 'Keyboard_text', 'Keyboard_timestamps']
 sentence = []
 periods = []
 chunks = []
 count = 0
 start = time.time()
+
+
+for i in folders:
+    try:
+        os.makedirs('./' + i)
+    except Exception as e:
+        print(e)
 
 keyboard_sound = 0
 soundDir = './Keyboard_sound'
@@ -26,6 +34,12 @@ textDir = './Keyboard_text'
 for path in os.listdir(textDir):
     if os.path.isfile(os.path.join(textDir, path)):
         keyboard_text += 1
+
+keyboard_timestamp = 0
+timeDir = './Keyboard_text'
+for path in os.listdir(timeDir):
+    if os.path.isfile(os.path.join(timeDir, path)):
+        keyboard_timestamp += 1
 
 # the file name output you want to record into
 filename = "record_keyboard.wav"
@@ -85,6 +99,15 @@ with Listener(on_press=on_press, on_release=on_release) as listener:
 textToSave = ' '.join(sentence)
 with open('./Keyboard_text/' + str(keyboard_text) + '.txt', 'w') as f:
     f.write(textToSave)
+
+# Save text to Keyboard_timestamps folder
+for i, val in enumerate(periods):
+    if len(val) == 1:
+        periods[i].append(periods[i + 1][0])
+        periods[i +1].pop(0)
+timeToSave = ''.join(str(periods))
+with open('./Keyboard_timestamps/' + str(keyboard_timestamp) + '.txt', 'w') as f:
+    f.write(timeToSave)
 
 for i in range(int(sample_rate / chunk * record_seconds)):
     data = stream.read(chunk)
